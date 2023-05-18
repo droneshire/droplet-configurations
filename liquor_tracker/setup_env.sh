@@ -1,0 +1,27 @@
+#!/bin/bash
+
+DROPBOX_DIR=$1
+
+if [ -z "$DROPBOX_DIR/.env" ]; then
+    cat <<EOT > ${DROPBOX_DIR}/.env
+DEFAULT_DB="inventory_manager.db"
+
+# Configure the Twilio SMS provider.
+TWILIO_FROM_SMS_NUMBER="<INSERT YOUR TWILIO SMS NUMBER HERE>"
+TWILIO_AUTH_TOKEN="<INSERT YOUR TWILIO AUTH TOKEN HERE>"
+TWILIO_ACCOUNT_SID="<INSERT YOUR TWILIO ACCOUNT SID HERE>"
+
+# Website to download the inventory from
+INVENTORY_DOWNLOAD_URL="https://abc.nc.gov/StoresBoards/ExportData"
+INVENTORY_DOWNLOAD_KEY="------WebKitFormBoundaryf3qSjXGzLaxCryi8--\r\n"
+
+# Admin settings
+ADMIN_NAME="<INSERT YOUR ADMIN NAME HERE>"
+ADMIN_PHONE="<INSERT YOUR ADMIN PHONE NUMBER HERE>"
+ADMIN_EMAIL="<INSERT YOUR ADMIN EMAIL HERE>"
+ADMIN_EMAIL_PASSWORD_ENCRYPTED="<INSERT YOUR ENCRYPTED ADMIN EMAIL PASSWORD HERE>"
+
+# Firebase settings
+GOOGLE_APPLICATION_CREDENTIALS="firebase_service_account.json"
+EOT
+fi
