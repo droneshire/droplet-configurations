@@ -1,9 +1,13 @@
 #!/bin/bash
 
 HOME_DIR=$HOME
+
 KEY_DIR=$1
-REPO_GITHUB=$2
+CONFIG_DIR=$2
+
+REPO_GITHUB=$(cat $HOME_DIR/.github_repo)
 REPO_NAME=$(echo $REPO_GITHUB | cut -d'/' -f2 | cut -d'.' -f1)
+REPO_DIR=$HOME_DIR/$REPO_NAME
 
 echo "Repo name: $REPO_NAME, from repo: $REPO_GITHUB"
 
@@ -35,11 +39,15 @@ git clone $REPO_GITHUB $REPO_DIR
 echo "alias inventory_bot_dir='cd $REPO_DIR'" >> ~/.bashrc
 source ~/.bashrc
 
-tmux new -s bot-session &
+tmux new -d -s bot-session
 
 tmux split-window -t bot-session:0 -v
-tmux send-keys -t bot-session:0.0 "inventory_bot_dir; make init; make install; make inventory_bot_prod" C-m
-tmux send-keys -t bot-session:0.1 "inventory_bot_dir; make reset_server" C-m
+tmux send-keys -t bot-session:0.0 "inventory_bot_dir; make init; make install;" C-m
+tmux send-keys -t bot-session:0.1 "inventory_bot_dir" C-m
+
+ln -s $CONFIG_DIR/.env $REPO_DIR/.env
+ln -s $CONFIG_DIR/firebase_service_account.json $REPO_DIR/firebase_service_account.json
 
 echo "Exit this session using `Ctrl+B, D`, and then run 'tmux attach -t bot-session' to reattach"
-sleep 2
+
+sleep infinity
