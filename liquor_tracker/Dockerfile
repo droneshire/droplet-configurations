@@ -27,13 +27,11 @@ RUN mkdir -p ${SSH_DIR} && chmod 700 ${SSH_DIR}
 
 
 COPY .github_repo ${GITHUB_REPO_FILE}
+COPY ./config ${SSH_DIR}/config
 
 RUN ssh-keyscan github.com >> $TMP_GITHUB_KEY
 RUN ssh-keygen -lf $TMP_GITHUB_KEY
 RUN echo $TMP_GITHUB_KEY >> ${SSH_DIR}/known_hosts
-RUN echo "Host github.com" > ${SSH_DIR}/config && \
-    echo "    UserKnownHostsFile=/dev/null" >> ${SSH_DIR}/config && \
-    echo "    StrictHostKeyChecking=no" >> ${SSH_DIR}/config
 
 WORKDIR ${HOME_DIR}
 
