@@ -1,3 +1,4 @@
 id_ed25519*
 
-*/.github_repo
+.github_repo
+.env
