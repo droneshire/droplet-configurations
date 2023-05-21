@@ -1,3 +1,33 @@
+#!/bin/bash
+
+wait_for_input() {
+    echo "Press any key to continue"
+    while [ true ] ; do
+        read -t 3 -n 1
+        if [ $? = 0 ] ; then
+            break
+        else
+            echo "waiting for the keypress"
+        fi
+    done
+}
+
+DROPBOX_DIR=~/Dropbox/droplet_bot
+
+
+mkdir -p /tmp/dropbox
+mkdir -p /opt/dropbox
+wget -O /tmp/dropbox/dropbox.tar.gz "https://www.dropbox.com/download?plat=lnx.x86_64"
+tar xzfv /tmp/dropbox/dropbox.tar.gz --strip 1 -C /opt/dropbox
+/opt/dropbox/dropboxd
+
+wait_for_input
+
+mkdir -p /etc/sysconfig
+echo "DROPBOX_USERS=\"`whoami`\"" >> /etc/sysconfig/dropbox
+
+## Create ubuntu version of /etc/systemd/system/dropbox:
+cat <<EOT > /etc/systemd/system/dropbox
 #!/bin/sh
 
 # To configure, add line with DROPBOX_USERS="user1 user2" to /etc/sysconfig/dropbox
@@ -32,7 +62,7 @@ start() {
 }
 
 status() {
-    for dbuser in $DROPBOX_pUSERS; do
+    for dbuser in $DROPBOX_USERS; do
         dbpid=`pgrep -u $dbuser dropbox | grep -v grep`
         if [ -z $dbpid ] ; then
             echo "dropboxd for USER $dbuser: not running."
@@ -77,3 +107,41 @@ case "$1" in
         echo $"Usage: $prog {start|status|stop|restart}"
         RETVAL=3
 esac
+EOT
+
+## Modify /etc/systemd/system/dropbox.service:
+cat <<EOT > /etc/systemd/system/dropbox.service
+[Unit]
+Description=Dropbox is a filesyncing sevice provided by dropbox.com. This service starts up the dropbox daemon.
+After=network.target syslog.target
+
+[Service]
+Environment=LC_ALL=en_US.UTF-8
+Environment=LANG=en_US.UTF-8
+EnvironmentFile=-/etc/sysconfig/dropbox
+ExecStart=/etc/systemd/system/dropbox start
+ExecReload=/etc/systemd/system/dropbox restart
+ExecStop=/etc/systemd/system/dropbox stop
+Type=forking
+
+[Install]
+WantedBy=multi-user.target
+EOT
+
+# enable systemd service
+systemctl daemon-reload
+systemctl start dropbox
+systemctl enable dropbox
+
+# install dropbox cli
+cd ~
+wget -P ~/ -O dropbox.py https://www.dropbox.com/download?dl=packages/dropbox.py
+chmod +x ~/dropbox.py
+ln -s /opt/dropbox ~/.dropbox-dist
+
+# copy logs dir if needed (should be in dropbox)
+# copy config and credentials files
+
+wait_for_input
+
+mkdir -p $DROPBOX_DIR/logs
